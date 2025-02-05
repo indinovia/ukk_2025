@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'home_page.dart';
+
+class Login extends StatefulWidget {
+  const Login({super.key});
+
+  @override
+  _LoginState createState() => _LoginState();
+}
 
 
+class _LoginState extends State<Login> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-class login extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +34,7 @@ class login extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               child: TextField(
-                controller: TextEditingController(),
+                controller: _usernameController,
                 obscureText: false,
                 textAlign: TextAlign.start,
                 maxLines: 1,
@@ -72,7 +84,7 @@ class login extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               child: TextField(
-                controller: TextEditingController(),
+                controller: _passwordController,
                 obscureText: false,
                 textAlign: TextAlign.start,
                 maxLines: 1,
@@ -154,3 +166,4 @@ class login extends StatelessWidget {
     );
   }
 }
+
