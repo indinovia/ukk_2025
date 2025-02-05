@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_page.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
+  const Login({Key? key}) : super(key: key);
 
   @override
   _LoginState createState() => _LoginState();
@@ -14,10 +14,40 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isObsurve = true;
+  bool _isObscure = true,
   
+  final _formKey = GlobalKey<FormState>;
+
+String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) { 
+      return 'Username tidak boleh kosong';
+    }
+    if (value.length < 4) {
+      return 'Username minimal 4 karakter'; 
+    }
+    return null;
+  }
+
+ 
+  String? _validatePassword(String? value) {
+    if (value == null || value.trim().isEmpty) { 
+      return 'Password tidak boleh kosong';
+    }
+    if (value.length < 6) { 
+      return 'Password minimal 6 karakter'; 
+    }
+    return null; 
+  }
 
 
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) { 
+      return; 
+    }
+
+    final username = _usernameController.text.trim(); 
+    final password = _passwordController.text.trim(); 
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,7 +171,7 @@ class _LoginState extends State<Login> {
               child: Align(
                 alignment: Alignment(0.0, 0.2),
                 child: MaterialButton(
-                  onPressed: () {},
+                  onPressed: _login,
                   color: Color(0xff614817),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
