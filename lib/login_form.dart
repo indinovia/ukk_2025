@@ -134,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(10.0)),
                     filled: true,
                     fillColor: Color(0xfff2f2f3),
-                    prefixIcon: Icon(Icons.lock, color: Color(0xff212435)),
+                    prefixIcon: const Icon(Icons.lock, color: Color(0xff212435)),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isObscured ? Icons.visibility_off : Icons.visibility,
@@ -153,7 +153,7 @@ class _LoginPageState extends State<LoginPage> {
                 padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: MaterialButton(
                   onPressed: _login,
-                  color: Color.fromARGB(255, 255, 130, 242),
+                  color: Color.fromARGB(255, 241, 153, 226),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),

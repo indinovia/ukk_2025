@@ -25,8 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String searchQuery = '';
 
+
   @override
-  // ignore: override_on_non_overriding_member
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffffffff),
@@ -34,11 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 4,
         centerTitle: false,
         automaticallyImplyLeading: false,
-        backgroundColor: Color.fromARGB(255, 255, 130, 242),
+        backgroundColor: Color(0xffffbcf8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
         ),
-        title: Text(
+        title: const Text(
           "Kasir",
           style: TextStyle(
             fontWeight: FontWeight.w400,
@@ -47,13 +47,11 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Color(0xff000000),
           ),
         ),
-        leading: Icon(
-          Icons.menu,
-          color: Color(0xff212435),
-          size: 24,
-        ),
-        actions: [
-          Icon(Icons.logout, color: Color(0xff212435), size: 24),
+       actions:const [
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 11, 0),
+            child: Icon(Icons.login, color: Color(0xff212435), size: 24),
+          ),
         ],
       ),
       body: GridView(
@@ -61,15 +59,53 @@ class _HomeScreenState extends State<HomeScreen> {
         shrinkWrap: false,
         scrollDirection: Axis.vertical,
         physics: ScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 8,
+          crossAxisSpacing: 8,                                       
           mainAxisSpacing: 8,
           childAspectRatio: 1.2,
         ),
-        children: [],
+        children: [
+          Container(
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.zero,
+            width: 200,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Color(0x1f000000),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.zero,
+              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
+            ),
+            child:const Padding(
+              padding: EdgeInsets.fromLTRB(0, 90, 0, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Icon(
+                    Icons.edit,
+                    color: Color(0xff212435),
+                    size: 24,
+                  ),
+                Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                    child: Icon(
+                      Icons.delete,
+                      color: Color(0xff212435),
+                      size: 24,
+                    ),
+                ),
+                
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem> [BottomNavigationBarItem(icon: Icon.person)]
     );
   }
 }
-
