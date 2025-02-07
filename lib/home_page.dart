@@ -1,11 +1,32 @@
-
-
 ///File download from FlutterViz- Drag and drop a tools. For more details visit https://flutterviz.io/
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HomePage extends StatelessWidget {
+ class HomeScreen extends StatefulWidget {
+  final int userId;
+  final String username;
+
+
+  const HomeScreen(
+      {super.key,
+      required this.userId,
+      required this.username});
+
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final SupabaseClient supabase =
+      Supabase.instance.client;
+  List<Map<String, dynamic>> products = []; 
+  List<Map<String, dynamic>> filteredProducts = [];
+  bool isLoading = true; 
+  int _currentIndex = 0;
+  String searchQuery = '';
+
+  @override
+  // ignore: override_on_non_overriding_member
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffffffff),
@@ -13,12 +34,12 @@ class HomePage extends StatelessWidget {
         elevation: 4,
         centerTitle: false,
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0xff3a57e8),
+        backgroundColor: Color.fromARGB(255, 255, 130, 242),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,
         ),
         title: Text(
-          "AppBar",
+          "Kasir",
           style: TextStyle(
             fontWeight: FontWeight.w400,
             fontStyle: FontStyle.normal,
@@ -32,11 +53,11 @@ class HomePage extends StatelessWidget {
           size: 24,
         ),
         actions: [
-          Icon(Icons.login, color: Color(0xff212435), size: 24),
+          Icon(Icons.logout, color: Color(0xff212435), size: 24),
         ],
       ),
       body: GridView(
-        padding: EdgeInsets.all(0),
+        padding: EdgeInsets.zero,
         shrinkWrap: false,
         scrollDirection: Axis.vertical,
         physics: ScrollPhysics(),
@@ -46,69 +67,9 @@ class HomePage extends StatelessWidget {
           mainAxisSpacing: 8,
           childAspectRatio: 1.2,
         ),
-        children: [
-          Container(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            width: 200,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0x1f000000),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            width: 200,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0x1f000000),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            width: 200,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0x1f000000),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            width: 200,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0x1f000000),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            width: 200,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Color(0x1f000000),
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.zero,
-              border: Border.all(color: Color(0x4d9e9e9e), width: 1),
-            ),
-          ),
-        ],
+        children: [],
       ),
     );
   }
 }
+

@@ -1,178 +1,159 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home_page.dart';
+import 'package:flutter/material.dart'; 
+import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'home_page.dart'; 
 
-class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  _LoginState createState() => _LoginState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-
-class _LoginState extends State<Login> {
+class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isObscure = true,
-  
-  final _formKey = GlobalKey<FormState>;
+  bool _isObscured = true;
 
-String? _validateUsername(String? value) {
-    if (value == null || value.trim().isEmpty) { 
+  final _formKey = GlobalKey<FormState>();
+
+  String? _validateUsername(String? value) {
+    if (value == null || value.trim().isEmpty) {
       return 'Username tidak boleh kosong';
-    }
-    if (value.length < 4) {
-      return 'Username minimal 4 karakter'; 
     }
     return null;
   }
 
- 
-  String? _validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) { 
-      return 'Password tidak boleh kosong';
-    }
-    if (value.length < 6) { 
-      return 'Password minimal 6 karakter'; 
-    }
-    return null; 
-  }
+  
 
+  String? _validatePassword(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Password tidak boleh kosong';
+    } else {
+    }
+    return null;
+  }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) { 
-      return; 
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
 
-    final username = _usernameController.text.trim(); 
-    final password = _passwordController.text.trim(); 
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final response = await Supabase.instance.client
+          .from('user')
+          .select('id, username')
+          .eq('username', username)
+          .eq('password', password)
+          .maybeSingle();
+
+      if (response != null) {
+        final userId = response['id'] as int;
+        final userName = response['username'] as String;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selamat datang, $userName!')),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              userId: userId,
+              username: userName,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Login gagal. Username atau password salah.')),
+        );
+      }
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+      );
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffffffff),
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Icon(
-              Icons.account_circle,
-              color: Color(0xff212435),
-              size: 90,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-              child: TextField(
-                controller: _usernameController,
-                obscureText: false,
-                textAlign: TextAlign.start,
-                maxLines: 1,
-                style: TextStyle(
-                  fontWeight: FontWeight.w400,
-                  fontStyle: FontStyle.normal,
-                  fontSize: 14,
-                  color: Color(0xff000000),
-                ),
-                decoration: InputDecoration(
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
-                  ),
-                  labelText: "Username",
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.normal,
-                    fontSize: 14,
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 0, 30),
+                child: Text(
+                  "Login",
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 25,
                     color: Color(0xff000000),
                   ),
-                  hintText: "Username",
-                  hintStyle: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.normal,
-                    fontSize: 14,
-                    color: Color(0xff000000),
-                  ),
-                  filled: true,
-                  fillColor: Color(0xfff2f2f3),
-                  isDense: false,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  prefixIcon:
-                      Icon(Icons.person, color: Color(0xff212435), size: 24),
                 ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              child: TextField(
-                controller: _passwordController,
-                obscureText: false,
-                textAlign: TextAlign.start,
-                maxLines: 1,
-                style: TextStyle(
-                  fontWeight: FontWeight.w400,
-                  fontStyle: FontStyle.normal,
-                  fontSize: 14,
-                  color: Color(0xff000000),
-                ),
-                decoration: InputDecoration(
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                child: TextFormField(
+                  controller: _usernameController,
+                  validator: _validateUsername,
+                  decoration: InputDecoration(
+                    labelText: "Username",
+                    hintText: "Masukkan username",
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
+                    filled: true,
+                    fillColor: Color(0xfff2f2f3),
+                    prefixIcon: Icon(Icons.person, color: Color(0xff212435)),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide(color: Color(0xff000000), width: 1),
-                  ),
-                  labelText: "Password",
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.normal,
-                    fontSize: 14,
-                    color: Color(0xff000000),
-                  ),
-                  hintText: "Password",
-                  hintStyle: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.normal,
-                    fontSize: 14,
-                    color: Color(0xff000000),
-                  ),
-                  filled: true,
-                  fillColor: Color(0xfff2f2f3),
-                  isDense: false,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                  prefixIcon:
-                      Icon(Icons.lock, color: Color(0xff212435), size: 24),
-                  suffixIcon: Icon(Icons.visibility_off,
-                      color: Color(0xff212435), size: 24),
                 ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-              child: Align(
-                alignment: Alignment(0.0, 0.2),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                child: TextFormField(
+                  controller: _passwordController,
+                  validator: _validatePassword,
+                  obscureText: _isObscured,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    hintText: "Masukkan password",
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0)),
+                    filled: true,
+                    fillColor: Color(0xfff2f2f3),
+                    prefixIcon: Icon(Icons.lock, color: Color(0xff212435)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscured ? Icons.visibility_off : Icons.visibility,
+                        color: Color(0xff212435),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscured = !_isObscured;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: MaterialButton(
                   onPressed: _login,
-                  color: Color(0xff614817),
+                  color: Color.fromARGB(255, 255, 130, 242),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20.0),
@@ -181,22 +162,17 @@ String? _validateUsername(String? value) {
                   padding: EdgeInsets.all(16),
                   child: Text(
                     "Login",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      fontStyle: FontStyle.normal,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   textColor: Color(0xffffffff),
                   height: 40,
                   minWidth: 140,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
