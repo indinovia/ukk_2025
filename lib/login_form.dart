@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _validateUsername(String? value) {
     // menambah validasi pada bagian username, jika username kosong atau tidak diisi maka akan muncul tulisan username tidak boleh kosng
     if (value == null || value.trim().isEmpty) {
-      return 'Username tidak boleh kosong';
+      return 'Username harus diisi';
     }
     return null;
   }
@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _validatePassword(String? value) {
     //sama seperti username
     if (value == null || value.trim().isEmpty) {
-      return 'Password tidak boleh kosong';
+      return 'Password harus diisi';
     }
     return null;
   }
