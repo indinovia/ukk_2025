@@ -11,21 +11,25 @@ class PelangganPage extends StatefulWidget {
 }
 
 class _CustomerPageState extends State<PelangganPage> {
-  final SupabaseClient supabase = Supabase.instance.client;
-  List<Map<String, dynamic>> customers = [];
-  bool isLoading = true;
+  final SupabaseClient supabase = Supabase.instance.client; // Inisialisasi Supabase client
+  List<Map<String, dynamic>> customers = []; // List untuk menyimpan data pelanggan
+  List<Map<String, dynamic>> filteredCustomers = []; // List untuk menyimpan data pelanggan yang difilter
+  bool isLoading = true; // Status untuk menampilkan loading
+  String searchQuery = ''; // Variabel untuk menyimpan query pencarian
 
   @override
   void initState() {
     super.initState();
-    _fetchCustomers();
+    _fetchCustomers(); // Ambil data pelanggan saat halaman pertama kali dibuka
   }
 
+  // Fungsi untuk mengambil data pelanggan dari database
   Future<void> _fetchCustomers() async {
     try {
       final response = await supabase.from('pelanggan').select();
       setState(() {
         customers = List<Map<String, dynamic>>.from(response);
+        filteredCustomers = customers; // Inisialisasi filteredCustomers
         isLoading = false;
       });
     } catch (e) {
@@ -33,6 +37,7 @@ class _CustomerPageState extends State<PelangganPage> {
     }
   }
 
+  // Fungsi untuk menambahkan pelanggan baru ke database
   Future<void> _addCustomer(
       String nama, String alamat, String nomorTelepon) async {
     try {
@@ -41,13 +46,13 @@ class _CustomerPageState extends State<PelangganPage> {
         'alamat': alamat,
         'nomor_telepon': nomorTelepon,
       });
-      _fetchCustomers();
-
+      _fetchCustomers(); // Refresh daftar pelanggan setelah pembaruan
     } catch (e) {
       _showError('Failed to add customer: $e');
     }
   }
 
+  // Fungsi untuk memperbarui data pelanggan
   Future<void> _updateCustomer(
       int id, String nama, String alamat, String nomorTelepon) async {
     try {
@@ -57,7 +62,6 @@ class _CustomerPageState extends State<PelangganPage> {
         'nomor_telepon': nomorTelepon,
       }).eq('pelanggan_id', id);
       _fetchCustomers();
-// Panggil callback
     } catch (e) {
       _showError('Failed to update customer: $e');
     }
@@ -69,12 +73,10 @@ class _CustomerPageState extends State<PelangganPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Konfirmasi'),
-          content:
-              const Text('Apakah Anda yakin ingin menghapus pelanggan ini?'),
+          content: const Text('Apakah Anda yakin ingin menghapus pelanggan ini?'),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(context, false), // Tidak jadi hapus
+              onPressed: () => Navigator.pop(context, false), // Tidak jadi hapus
               child: const Text('Tidak'),
             ),
             ElevatedButton(
@@ -89,7 +91,7 @@ class _CustomerPageState extends State<PelangganPage> {
     if (result == true) {
       try {
         await supabase.from('pelanggan').delete().eq('pelanggan_id', id);
-        _fetchCustomers();
+        _fetchCustomers(); // Refresh daftar setelah penghapusan
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Pelanggan berhasil dihapus')),
@@ -100,15 +102,33 @@ class _CustomerPageState extends State<PelangganPage> {
     }
   }
 
+  // Menampilkan error dalam snackbar
   void _showError(String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
+  // Fungsi untuk memfilter pelanggan berdasarkan pencarian
+  void _filterCustomers(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredCustomers = customers.where((customer) {
+        return customer['nama_pelanggan']
+                .toLowerCase()
+                .contains(query.toLowerCase()) ||
+            customer['alamat'].toLowerCase().contains(query.toLowerCase()) ||
+            customer['nomor_telepon']
+                .toLowerCase()
+                .contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  // Widget untuk menampilkan tabel pelanggan
   Widget _buildCustomerTable() {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
-        : customers.isEmpty
+        : filteredCustomers.isEmpty
             ? const Center(child: Text('No customers found'))
             : SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -120,7 +140,7 @@ class _CustomerPageState extends State<PelangganPage> {
                     DataColumn(label: Text('Nomor Telepon')),
                     DataColumn(label: Text('Actions')),
                   ],
-                  rows: customers.asMap().entries.map((entry) {
+                  rows: filteredCustomers.asMap().entries.map((entry) {
                     final index = entry.key + 1;
                     final customer = entry.value;
                     return DataRow(cells: [
@@ -155,13 +175,25 @@ class _CustomerPageState extends State<PelangganPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: _buildCustomerTable(),
+        child: Column(
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: _filterCustomers,
+            ),
+            const SizedBox(height: 8.0),
+            Expanded(child: _buildCustomerTable()),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _addCustomerDialog();
         },
-        backgroundColor: const Color.fromARGB(255, 255, 178, 240),
+        backgroundColor: Colors.purple,
         child: const Icon(Icons.add),
       ),
     );
@@ -173,7 +205,6 @@ class _CustomerPageState extends State<PelangganPage> {
     final TextEditingController alamatController = TextEditingController();
     final TextEditingController nomorTeleponController =
         TextEditingController();
-    
 
     showDialog(
       context: context,
@@ -221,8 +252,6 @@ class _CustomerPageState extends State<PelangganPage> {
                       return null;
                     },
                   ),
-                 
-
                 ],
               ),
             ),
