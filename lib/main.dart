@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       title: 'flutter crud',
       theme: ThemeData(
         primarySwatch:
-            Colors.green, //warna otomatid yang diberikan oleh flutter
+            Colors.green, //warna otomatis yang diberikan oleh flutter
       ),
       debugShowCheckedModeBanner:
           false, //untuk menghilangkan tulisan debug di kanan atas layar
