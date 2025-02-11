@@ -37,70 +37,99 @@ class _CustomerPageState extends State<PelangganPage> {
     }
   }
 
-  // Fungsi untuk menambahkan pelanggan baru ke database
-  Future<void> _addCustomer(
-      String nama, String alamat, String nomorTelepon) async {
-    try {
-      await supabase.from('pelanggan').insert({
-        'nama_pelanggan': nama,
-        'alamat': alamat,
-        'nomor_telepon': nomorTelepon,
-      });
-      _fetchCustomers(); // Refresh daftar pelanggan setelah pembaruan
-    } catch (e) {
-      _showError('Failed to add customer: $e');
-    }
-  }
+  
+ Future<String?> _isDuplicateCustomer(String nama, String nomorTelepon, [int? id]) async {
+  final response = await supabase
+      .from('pelanggan')
+      .select()
+      .or('nama_pelanggan.eq.$nama,nomor_telepon.eq.$nomorTelepon');
 
-  // Fungsi untuk memperbarui data pelanggan
-  Future<void> _updateCustomer(
-      int id, String nama, String alamat, String nomorTelepon) async {
-    try {
-      await supabase.from('pelanggan').update({
-        'nama_pelanggan': nama,
-        'alamat': alamat,
-        'nomor_telepon': nomorTelepon,
-      }).eq('pelanggan_id', id);
-      _fetchCustomers();
-    } catch (e) {
-      _showError('Failed to update customer: $e');
-    }
-  }
-
-  Future<void> _confirmDeleteCustomer(int id) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Konfirmasi'),
-          content: const Text('Apakah Anda yakin ingin menghapus pelanggan ini?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false), // Tidak jadi hapus
-              child: const Text('Tidak'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true), // Lanjutkan hapus
-              child: const Text('Ya'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == true) {
-      try {
-        await supabase.from('pelanggan').delete().eq('pelanggan_id', id);
-        _fetchCustomers(); // Refresh daftar setelah penghapusan
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pelanggan berhasil dihapus')),
-        );
-      } catch (e) {
-        _showError('Gagal menghapus pelanggan: $e');
+  for (var customer in response) {
+    if (id == null || customer['pelanggan_id'] != id) {
+      if (customer['nama_pelanggan'] == nama) {
+        return 'Nama sudah terdaftar!';  //eror jika nama sudah digunakan
+      }
+      if (customer['nomor_telepon'] == nomorTelepon) {
+        return 'Nomor telepon sudah terdaftar!'; //eorr jika nbomor telepon sudah digunakan
       }
     }
   }
+  return null; // Tidak ada duplikasi
+}
+
+
+  // Fungsi untuk menambahkan pelanggan baru ke database
+ Future<void> _addCustomer(String nama, String alamat, String nomorTelepon) async {
+  String? errorMessage = await _isDuplicateCustomer(nama, nomorTelepon);
+  if (errorMessage != null) {
+    _showError(errorMessage);
+    return;
+  }
+  try {
+    await supabase.from('pelanggan').insert({
+      'nama_pelanggan': nama,
+      'alamat': alamat,
+      'nomor_telepon': nomorTelepon,
+    });
+    _fetchCustomers();
+  } catch (e) {
+    _showError('Gagal menambahkan pelanggan: $e');
+  }
+}
+
+
+  // Fungsi untuk memperbarui data pelanggan
+ Future<void> _updateCustomer(int id, String nama, String alamat, String nomorTelepon) async {
+  String? errorMessage = await _isDuplicateCustomer(nama, nomorTelepon, id);
+  if (errorMessage != null) {
+    _showError(errorMessage);
+    return;
+  }
+  try {
+    await supabase.from('pelanggan').update({
+      'nama_pelanggan': nama,
+      'alamat': alamat,
+      'nomor_telepon': nomorTelepon,
+    }).eq('pelanggan_id', id);
+    _fetchCustomers();
+  } catch (e) {
+    _showError('Gagal memperbarui pelanggan: $e');
+  }
+}
+ Future<void> _confirmDeleteCustomer(int id) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text('Apakah Anda yakin ingin menghapus pelanggan ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // Tidak jadi hapus
+            child: const Text('Tidak'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true), // Lanjutkan hapus
+            child: const Text('Ya'),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (result == true) {
+    try {
+      await supabase.from('pelanggan').delete().eq('pelanggan_id', id);
+      _fetchCustomers(); // Refresh daftar setelah penghapusan
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pelanggan berhasil dihapus')),
+      );
+    } catch (e) {
+      _showError('Gagal menghapus pelanggan: $e');
+    }
+  }
+}
 
   // Menampilkan error dalam snackbar
   void _showError(String message) {
@@ -171,7 +200,7 @@ class _CustomerPageState extends State<PelangganPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customers'),
+        title: const Text('Regristrasi Member'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
