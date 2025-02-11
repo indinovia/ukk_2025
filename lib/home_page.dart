@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ukk_2025/history.dart';
 import 'package:ukk_2025/login_form.dart';
 import 'package:ukk_2025/transaction_page.dart';
 import 'pelanggan_page.dart';
@@ -362,11 +363,11 @@ class _HomeScreenState extends State<HomeScreen> {
       case 4:
         return PelangganPage();
       case 3:
-        return PelangganPage();
+        return SalesHistoryPage();
       case 2:
         return TransactionPage(userId: 123, username: 'disesuaikan');
       case 1:
-        return PelangganPage();
+        return PelangganPage(); //untuk menyambungkan ke halaman lain
       case 0:
       default:
         return Column(
@@ -405,17 +406,22 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _logout,
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(50.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+         bottom: PreferredSize(
+        preferredSize: Size.fromHeight(30.0), // Tinggi AppBar lebih kecil
+        child: Container(
+          height: 2, // Garis bawah kecil
+          color: Colors.grey[300],
           ),
         ),
       ),
-      body: _getPage(_currentIndex), // Tampilkan daftar produk
+    body: _getPage(_currentIndex), // Tampilkan halaman berdasarkan indeks
       bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Update indeks saat item bottom nav ditekan
+          });
+        },
           selectedItemColor: Colors.purple,
           unselectedItemColor: Colors.grey,
           items: const [
@@ -434,6 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.add, color: Colors.white),
             )
           : null,
+          
     );
   }
 }
