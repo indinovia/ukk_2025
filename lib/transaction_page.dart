@@ -154,43 +154,59 @@ class _TransactionPageState extends State<TransactionPage> {
     );
   }
 
-  void _completePayment() async {
-    try {
-      final totalHarga = cart.fold(0.0, (sum, item) => sum + item['subtotal']);
-      final penjualanResponse = await supabase.from('penjualan').insert({
-        'tanggal_penjualan': DateTime.now().toIso8601String(),
-        'total_harga': totalHarga,
-        'pelanggan_id': selectedCustomer!['pelanggan_id'],
-      }).select();
+ List<Map<String, dynamic>> history = []; // Simpan history transaksi
 
-      final penjualanId = penjualanResponse[0]['penjualan_id'];
+void _completePayment() async {
+  try {
+    final totalHarga = cart.fold(0.0, (sum, item) => sum + item['subtotal']);
+    final penjualanResponse = await supabase.from('penjualan').insert({
+      'tanggal_penjualan': DateTime.now().toIso8601String(),
+      'total_harga': totalHarga,
+      'pelanggan_id': selectedCustomer!['pelanggan_id'],
+    }).select();
 
-      for (final item in cart) {
-        await supabase.from('detail_penjualan').insert({
-          'penjualan_id': penjualanId,
-          'produk_id': item['produk_id'],
-          'jumlah_produk': item['jumlah'],
-          'subtotal': item['subtotal'],
-        });
+    final penjualanId = penjualanResponse[0]['penjualan_id'];
 
-        await supabase.from('produk').update({
-          'stok': item['stok'] - item['jumlah'],
-        }).eq('produk_id', item['produk_id']);
-      }
-
-      final customerName = selectedCustomer!['nama_pelanggan'];
-
-      setState(() {
-        cart.clear();
-        selectedCustomer = null;
-        isPaymentPage = false;
+    for (final item in cart) {
+      await supabase.from('detail_penjualan').insert({
+        'penjualan_id': penjualanId,
+        'produk_id': item['produk_id'],
+        'jumlah_produk': item['jumlah'],
+        'subtotal': item['subtotal'],
       });
 
-      _showReceipt(totalHarga, customerName);
-    } catch (e) {
-      _showError('Failed to complete transaction: $e');
+      await supabase.from('produk').update({
+        'stok': item['stok'] - item['jumlah'],
+      }).eq('produk_id', item['produk_id']);
     }
+
+    final customerName = selectedCustomer!['nama_pelanggan'];
+    final DateTime now = DateTime.now();
+    final String formattedDate =
+        "${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute}:${now.second}";
+
+    // Simpan transaksi ke history (tanpa tabel di Supabase)
+    setState(() {
+      history.add({
+        'tanggal_transaksi': formattedDate,
+        'nama_pelanggan': customerName,
+        'total_harga': totalHarga,
+        'struk': List.from(cart), // Menyimpan salinan struk
+      });
+
+      cart.clear();
+      selectedCustomer = null;
+      isPaymentPage = false;
+    });
+
+    // Tampilkan struk setelah pembayaran selesai
+    _showReceipt(totalHarga, customerName);
+  } catch (e) {
+    _showError('Gagal menyelesaikan transaksi: $e');
   }
+}
+
+
 
   void _updateCartQuantity(int index, int change) {
     setState(() {
