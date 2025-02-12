@@ -8,39 +8,41 @@ import 'pelanggan_page.dart';
 class HomeScreen extends StatefulWidget {
   final int userId;
   final String username;
+  final String role;
 
-  const HomeScreen({super.key, required this.userId, required this.username});
+  const HomeScreen({
+    super.key,
+    required this.userId,
+    required this.username,
+    required this.role,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final SupabaseClient supabase =
-      Supabase.instance.client; // Koneksi ke Supabase
-  List<Map<String, dynamic>> products = []; // List untuk menyimpan data produk
-  List<Map<String, dynamic>> filteredProducts =
-      []; // List untuk hasil pencarian produk
-  bool isLoading = true; // Status loading data
-  int _currentIndex = 0; // Indeks untuk navigasi bottom bar
-  String searchQuery = ''; // Query pencarian produk
+  final SupabaseClient supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> filteredProducts = [];
+  bool isLoading = true;
+  int _currentIndex = 0;
+  String searchQuery = '';
   TextEditingController searchController = TextEditingController();
+
   void _logout() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-          builder: (context) =>
-              LoginPage()), // Navigasi kembali ke halaman login
+      MaterialPageRoute(builder: (context) => LoginPage()),
     );
   }
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts(); // Panggil fungsi untuk mengambil data produk dari Supabase
+    _fetchProducts();
     searchController.addListener(() {
-      _filterProducts(
-          searchController.text); // Update hasil pencarian saat teks berubah
+      _filterProducts(searchController.text);
     });
   }
 
@@ -55,8 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final response = await supabase.from('produk').select();
       setState(() {
-        products =
-            response.map((product) => product as Map<String, dynamic>).toList();
+        products = response.map((product) => product as Map<String, dynamic>).toList();
         filteredProducts = List.from(products);
         isLoading = false;
       });
@@ -73,15 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       searchQuery = query;
       filteredProducts = products.where((product) {
-        return product['nama_produk']
-                ?.toLowerCase()
-                .contains(query.toLowerCase()) ??
-            false;
+        return product['nama_produk']?.toLowerCase().contains(query.toLowerCase()) ?? false;
       }).toList();
     });
   }
 
-// Fungsi untuk mengecek apakah produk dengan nama yang sama sudah ada
+  // Fungsi untuk mengecek apakah produk dengan nama yang sama sudah ada
   Future<bool> _isDuplicateProduct(String namaProduk, {int? excludeId}) async {
     final existingProduct = await supabase
         .from('produk')
@@ -90,8 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .maybeSingle();
 
     if (existingProduct == null) return false;
-    if (excludeId != null && existingProduct['produk_id'] == excludeId)
-      return false;
+    if (excludeId != null && existingProduct['produk_id'] == excludeId) return false;
     return true;
   }
 
@@ -118,14 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _deleteProduct(int productId) async {
     try {
       await supabase.from('produk').delete().eq('produk_id', productId);
-      await _fetchProducts(); // Pastikan daftar produk diperbarui setelah penghapusan selesai
+      await _fetchProducts();
     } catch (e) {
       print('Error menghapus produk: $e');
     }
   }
 
-  Future<void> _editProduct(
-      int productId, String namaProduk, double harga, int stok) async {
+  Future<void> _editProduct(int productId, String namaProduk, double harga, int stok) async {
     if (await _isDuplicateProduct(namaProduk, excludeId: productId)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Produk dengan nama yang sama sudah ada!")),
@@ -146,12 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showEditProductDialog(Map<String, dynamic> product) {
-    final TextEditingController namaController =
-        TextEditingController(text: product['nama_produk']);
-    final TextEditingController hargaController =
-        TextEditingController(text: product['harga'].toString());
-    final TextEditingController stokController =
-        TextEditingController(text: product['stok'].toString());
+    final TextEditingController namaController = TextEditingController(text: product['nama_produk']);
+    final TextEditingController hargaController = TextEditingController(text: product['harga'].toString());
+    final TextEditingController stokController = TextEditingController(text: product['stok'].toString());
     final _formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -220,8 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final TextEditingController namaController = TextEditingController();
     final TextEditingController hargaController = TextEditingController();
     final TextEditingController stokController = TextEditingController();
-    TextEditingController searchController = TextEditingController();
-    List<Map<String, dynamic>> filteredProducts = [];
     final _formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -291,15 +282,11 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text("Hapus Produk"),
           content: Text("Apakah Anda yakin ingin menghapus produk ini?"),
           actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(context), // Tutup dialog jika batal
-              child: Text("Batal"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text("Batal")),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context); // Tutup dialog sebelum menghapus
-                await _deleteProduct(productId); // Hapus produk
+                Navigator.pop(context);
+                await _deleteProduct(productId);
               },
               child: Text("Hapus", style: TextStyle(color: Colors.red)),
             ),
@@ -310,14 +297,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Fungsi untuk menampilkan daftar produk dalam bentuk ListView
-  Widget _buildProductList() {
-    if (isLoading) {
-      return Center(
-          child: CircularProgressIndicator()); // Tampilkan indikator loading
-    }
-    if (filteredProducts.isEmpty) {
-      return Center(child: Text('Tidak ada produk tersedia'));
-    }
+ Widget _buildProductList() {
+    if (isLoading) return Center(child: CircularProgressIndicator());
+    if (filteredProducts.isEmpty) return Center(child: Text('Tidak ada produk tersedia'));
+
     return ListView.builder(
       padding: EdgeInsets.all(10),
       itemCount: filteredProducts.length,
@@ -325,73 +308,90 @@ class _HomeScreenState extends State<HomeScreen> {
         final product = filteredProducts[index];
         return Card(
           elevation: 3,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: Icon(Icons.shopping_bag, color: Colors.purple),
-            title: Text(product['nama_produk'] ?? 'Unknown',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle:
-                Text('Harga: Rp${product['harga']} | Stok: ${product['stok']}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {
-                    _showEditProductDialog(
-                        product); // Panggil fungsi edit di sini
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    _confirmDelete(product[
-                        'produk_id']); // Ganti dengan konfirmasi sebelum hapus
-                  },
-                ),
-              ],
-            ),
+            title: Text(product['nama_produk'] ?? 'Unknown', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('Harga: Rp${product['harga']} | Stok: ${product['stok']}'),
           ),
         );
       },
     );
   }
+    // Fungsi untuk menampilkan riwayat transaksi
+  Widget _buildTransactionHistory() {
+    // Implementasi untuk menampilkan riwayat transaksi pelanggan
+    return SalesHistoryPage(); // Ganti dengan implementasi yang sesuai
+  }
 
   Widget _getPage(int index) {
-    switch (index) {
-      case 4:
-        return PelangganPage();
-      case 3:
-        return SalesHistoryPage();
-      case 2:
-        return TransactionPage(userId: 123, username: 'disesuaikan');
-      case 1:
-        return PelangganPage(); //untuk menyambungkan ke halaman lain
-      case 0:
-      default:
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  hintText: 'Cari produk...',
-                  border: OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
+    if (widget.role == 'pelanggan') {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Cari produk...',
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
-            Expanded(child: _buildProductList()),
-          ],
-        );
+          ),
+          Expanded(child: _buildProductList()),
+        ],
+      );
+    } else {
+      switch (index) {
+        case 3:
+          return SalesHistoryPage(); // Ganti dengan halaman history
+        case 2:
+          return TransactionPage(userId: widget.userId, username: widget.username);
+        case 1:
+          return PelangganPage(); // Ganti dengan halaman pelanggan
+        case 0:
+        default:
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Cari produk...',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+              ),
+              Expanded(child: _buildProductList()),
+            ],
+          );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    List<BottomNavigationBarItem> bottomNavItems = [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
+    ];
+
+    if (widget.role == 'pelanggan') {
+      bottomNavItems.addAll([
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
+      ]);
+    } else if (widget.role == 'petugas') {
+      bottomNavItems.addAll([
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Data Pelanggan'),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transaksi'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
+      ]);
+    }
+
     return Scaffold(
       appBar: AppBar(
         elevation: 2,
@@ -406,41 +406,30 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _logout,
           ),
         ],
-         bottom: PreferredSize(
-        preferredSize: Size.fromHeight(30.0), // Tinggi AppBar lebih kecil
-        child: Container(
-          height: 2, // Garis bawah kecil
-          color: Colors.grey[300],
-          ),
-        ),
       ),
-    body: _getPage(_currentIndex), // Tampilkan halaman berdasarkan indeks
+      body: widget.role == 'pelanggan'
+          ? _currentIndex == 0
+              ? _buildProductList() // Tampilkan daftar produk
+              : _buildTransactionHistory() // Tampilkan riwayat transaksi
+          : _getPage(_currentIndex), // Untuk petugas
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Update indeks saat item bottom nav ditekan
+            _currentIndex = index;
           });
         },
-          selectedItemColor: Colors.purple,
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.person), label: 'Data Pelanggan'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.receipt), label: 'Transaksi'),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.history), label: 'Riwayat'),
-          ]),
-      floatingActionButton: _currentIndex == 0
+        selectedItemColor: Colors.purple,
+        unselectedItemColor: Colors.grey,
+        items: bottomNavItems,
+      ),
+      floatingActionButton: (widget.role == 'petugas' && _currentIndex == 0)
           ? FloatingActionButton(
               onPressed: _showAddProductDialog,
               backgroundColor: Colors.purple,
               child: Icon(Icons.add, color: Colors.white),
             )
           : null,
-          
     );
   }
 }
