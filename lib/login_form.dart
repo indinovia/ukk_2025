@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -14,16 +14,21 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isObscured = true;
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
   String? _usernameError;
   String? _passwordError;
 
   Future<void> _login() async {
+    if (_isLoading) return; // Mencegah klik berulang saat proses login
+    
     setState(() {
       _usernameError = null;
       _passwordError = null;
+      _isLoading = true;
     });
 
     if (!_formKey.currentState!.validate()) {
+      setState(() => _isLoading = false);
       return;
     }
 
@@ -33,13 +38,14 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final userResponse = await Supabase.instance.client
           .from('user')
-          .select('id, username, password')
+          .select('id, username, password, role')
           .eq('username', username)
           .maybeSingle();
 
       if (userResponse == null) {
         setState(() {
           _usernameError = 'Username tidak ditemukan';
+          _isLoading = false;
         });
         return;
       }
@@ -47,12 +53,22 @@ class _LoginPageState extends State<LoginPage> {
       if (userResponse['password'] != password) {
         setState(() {
           _passwordError = 'Password salah';
+          _isLoading = false;
         });
         return;
       }
 
       final userId = userResponse['id'] as int;
       final userName = userResponse['username'] as String;
+      final userRole = userResponse['role'] as String;
+
+      if (userRole != 'petugas' && userRole != 'pelanggan') {
+        setState(() {
+          _usernameError = 'Role tidak valid!';
+          _isLoading = false;
+        });
+        return;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -69,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context) => HomeScreen(
             userId: userId,
             username: userName,
+            role: userRole, // Kirim role ke HomeScreen
           ),
         ),
       );
@@ -76,6 +93,8 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Terjadi kesalahan: $e')),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -85,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xffffbcf8), const Color.fromARGB(255, 229, 199, 234)], // Gradient cantik
+            colors: [Color(0xffffbcf8), Color(0xFFE5C7EA)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -101,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 0, 0, 0),
+                    color: Colors.black,
                   ),
                 ),
                 SizedBox(height: 10),
@@ -128,8 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(height: 20),
                           TextFormField(
                             controller: _usernameController,
-                            validator: (value) =>
-                                value!.isEmpty ? 'Username harus diisi' : null,
+                            validator: (value) => value!.isEmpty ? 'Username harus diisi' : null,
                             decoration: InputDecoration(
                               labelText: "Username",
                               filled: true,
@@ -144,8 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(height: 15),
                           TextFormField(
                             controller: _passwordController,
-                            validator: (value) =>
-                                value!.isEmpty ? 'Password harus diisi' : null,
+                            validator: (value) => value!.isEmpty ? 'Password harus diisi' : null,
                             obscureText: _isObscured,
                             decoration: InputDecoration(
                               labelText: "Password",
@@ -157,9 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                               prefixIcon: Icon(Icons.lock, color: Colors.grey),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _isObscured
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
+                                  _isObscured ? Icons.visibility_off : Icons.visibility,
                                   color: Colors.grey,
                                 ),
                                 onPressed: () {
@@ -176,18 +191,20 @@ class _LoginPageState extends State<LoginPage> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _login,
+                              onPressed: _isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color.fromARGB(255, 194, 134, 196), // Warna keren
+                                backgroundColor: Color.fromARGB(255, 194, 134, 196),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 5,
                               ),
-                              child: Text(
-                                "Login",
-                                style: TextStyle(fontSize: 16, color: Colors.white),
-                              ),
+                              child: _isLoading
+                                  ? CircularProgressIndicator(color: Colors.white)
+                                  : Text(
+                                      "Login",
+                                      style: TextStyle(fontSize: 16, color: Colors.white),
+                                    ),
                             ),
                           ),
                         ],
@@ -203,3 +220,5 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+
